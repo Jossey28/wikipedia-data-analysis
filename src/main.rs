@@ -9,7 +9,7 @@ use parse_mediawiki_sql::{
 };
 
 fn main() -> anyhow::Result<()> {
-    let page_sql = unsafe { memory_map("raw\\enwiki-latest-page.sql.gz")? };
+    let page_sql = unsafe { memory_map("data\\enwiki-latest-page.sql")? };
     let redirects: Vec<(PageNamespace, PageTitle)> = iterate_sql_insertions(&page_sql).filter_map(
         |Page { namespace, title, is_redirect, ..}| {
             if is_redirect {
