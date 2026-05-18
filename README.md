@@ -10,18 +10,22 @@ I enjoy watching videos about data analytics so I thought, `"why not try it myse
 
 ## Project Set-Up (Windows)
 ```pwsh
-# Create the data directory if it doesn't exist
+# Create the data and raw directories if they don't exist
 New-Item -Path ".\data" -ItemType Directory -Force
+New-Item -Path ".\raw" -ItemType Directory -Force
 
 # Download seperate data sources
 ## Article Titles and IDs 
-Invoke-WebRequest "https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-page.sql.gz" -OutFile ".\data\enwiki-latest-page.sql.gz" 
+Invoke-WebRequest "https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-page.sql.gz" -OutFile ".\raw\enwiki-latest-page.sql.gz" 
 
 ## Internal Links between articles (e.g graph edges in the video)
-Invoke-WebRequest "https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pagelinks.sql.gz" -OutFile ".\data\enwiki-latest-pagelinks.sql.gz"
+Invoke-WebRequest "https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pagelinks.sql.gz" -OutFile ".\raw\enwiki-latest-pagelinks.sql.gz"
 
 ## Redirect mappings, maps alises to article titles
-Invoke-Webrequest "https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-redirect.sql.gz" -OutFile ".\data\enwiki-latest-redirect.sql.gz"
+Invoke-Webrequest "https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-redirect.sql.gz" -OutFile ".\raw\enwiki-latest-redirect.sql.gz"
+
+# Install 7za
+winget install 7zip.7zip
 
 # Extract the data into .sql files
 Get-ChildItem ".\raw\*.gz" | ForEach-Object { 
