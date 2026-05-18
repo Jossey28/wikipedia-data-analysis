@@ -1,0 +1,8 @@
+[package]
+name = "wikipedia-data-analysis"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.102"
+parse-mediawiki-sql = { version = "0.10.0", features = ["utils"] }
