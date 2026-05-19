@@ -1,25 +1,26 @@
-use std::fs::File;
 
-use anyhow::Ok;
-use parse_mediawiki_sql::{
-    iterate_sql_insertions,
-    schemas::Page,
-    field_types::{PageNamespace, PageTitle},
-    utils::memory_map,
-};
+use std::env;
+use mysql::{Pool, PooledConn, prelude::Queryable};
 
-fn main() -> anyhow::Result<()> {
-    let page_sql = unsafe { memory_map("data\\enwiki-latest-page.sql")? };
-    let redirects: Vec<(PageNamespace, PageTitle)> = iterate_sql_insertions(&page_sql).filter_map(
-        |Page { namespace, title, is_redirect, ..}| {
-            if is_redirect {
-                Some((namespace, title))
-            } else {
-                None
-            }
-        },
-    ).collect();
+fn main() {
+    let connection = establish_connection();
+}
 
-    println!("redirects vec {:?}", redirects);
-    Ok(())
+fn establish_connection() -> PooledConn {
+    dotenvy::dotenv().ok();
+
+    let host = env::var("MYSQL_SERVER_HOST").expect("Unable to load host from .env file");
+    let port = env::var("MYSQL_SERVER_PORT").expect("Unable to load port from .env file");
+    let username = env::var("MYSQL_SERVER_USERNAME").expect("Unable to load username from .env file");
+    let password = env::var("MYSQL_SERVER_PASSWORD").expect("Unable to load password from .env file");
+    let database = env::var("MYSQL_SERVER_DATABASE").expect("Unable to load database from .env file");
+
+    let connection_string = format!(
+        "mysql://{username}:{password}@{host}:{port}/{database}"
+    );
+
+    let pool = Pool::new(connection_string.as_str()).expect("Unable to create pool");
+    let conn = pool.get_conn().expect("Unable to create a connection to the pool");
+
+    conn
 }
