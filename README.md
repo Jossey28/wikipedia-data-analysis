@@ -39,8 +39,11 @@ Invoke-WebRequest "https://dev.mysql.com/get/Downloads/MySQLInstaller/mysql-inst
 
 & "$env:TEMP\mysql-installer.msi" # I just did full install
 
+
 mysqlsh --sql -u root -p -e "CREATE DATABASE wikipedia;"
-mysqlsh --sql -u root -p --database wikipedia --file .\data\enwiki-latest-page.sql
-mysqlsh --sql -u root -p --database wikipedia --file .\data\enwiki-latest-pagelinks.sql
-mysqlsh --sql -u root -p --database wikipedia --file .\data\enwiki-latest-redirect.sql
+
+# These 3 commands can take a varying amount of time, with the size being ~40GB of data being imported
+mysql -u root -p wikipedia --execute "SOURCE data/enwiki-latest-page.sql"
+mysql -u root -p wikipedia --execute "SOURCE data/enwiki-latest-redirect.sql"
+mysql -u root -p wikipedia --execute "SOURCE data/enwiki-latest-pagelinks.sql"
 ```

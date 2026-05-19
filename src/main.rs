@@ -1,6 +1,18 @@
 
 use std::env;
-use mysql::{Pool, PooledConn, prelude::Queryable};
+use mysql::{Pool, PooledConn};
+use serde::Deserialize;
+
+#[derive(Debug, Deserialize)]
+struct ConnectionConfig {
+    host: String,
+    port: u16,
+    database: String,
+
+    username: String,
+    password: String,
+}
+
 
 fn main() {
     let connection = establish_connection();
@@ -9,15 +21,10 @@ fn main() {
 fn establish_connection() -> PooledConn {
     dotenvy::dotenv().ok();
 
-    let host = env::var("MYSQL_SERVER_HOST").expect("Unable to load host from .env file");
-    let port = env::var("MYSQL_SERVER_PORT").expect("Unable to load port from .env file");
-    let username = env::var("MYSQL_SERVER_USERNAME").expect("Unable to load username from .env file");
-    let password = env::var("MYSQL_SERVER_PASSWORD").expect("Unable to load password from .env file");
-    let database = env::var("MYSQL_SERVER_DATABASE").expect("Unable to load database from .env file");
-
+    let config: ConnectionConfig = envy::from_env().expect("Failed to load config");
+    
     let connection_string = format!(
-        "mysql://{username}:{password}@{host}:{port}/{database}"
-    );
+        "mysql://{}:{}@{}:{}/{}", config.username, config.password, config.host, config.port, config.database);
 
     let pool = Pool::new(connection_string.as_str()).expect("Unable to create pool");
     let conn = pool.get_conn().expect("Unable to create a connection to the pool");
