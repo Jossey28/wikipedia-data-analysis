@@ -2,11 +2,27 @@
 
 ## Context
 
+### Where the Idea Came From
+
 This project idea was spawned from watching adumb's graph of wikipedia video
 
 [![Youtube Video Preview and Link](https://img.youtube.com/vi/JheGL6uSF-4/0.jpg)](https://www.youtube.com/watch?v=JheGL6uSF-4)
 
 I enjoy watching videos about data analytics so I thought, `"why not try it myself" :)`
+
+### Wikipedia's Data Dumps
+
+Wikimedia has all its latest data for the English wikipedia site hosted at `https://dumps.wikimedia.org/enwiki/latest`
+
+The data I'm using for this project is:
+
+page IDs, titles, namespaces, redirect flags via sql.gz @ enwiki-latest-page.sql.gz
+
+internal wikilinks between pages via sql.gz @ enwiki-latest-pagelinks.sql.gz
+
+redirect source -> target mappings (page ID, target title, target namespace) via sql.gz @ enwiki-latest-redirect.sql.gz 
+
+page -> categories via sql.gz @ enwiki-latest-categorylinks.sql.gz
 
 ## Project Set-Up (Windows)
 ### Download and Extract Data
@@ -24,15 +40,8 @@ Invoke-WebRequest "https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pagel
 
 ## Redirect mappings, maps alises to article titles
 Invoke-Webrequest "https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-redirect.sql.gz" -OutFile ".\raw\enwiki-latest-redirect.sql.gz"
-
-# Install 7za
-winget install 7zip.7zip
-
-# Extract the data into .sql files
-Get-ChildItem ".\raw\*.gz" | ForEach-Object { 
-    & "7za.exe" x $_.FullName -o ".\data\" -y 
-}
 ```
+
 ### Download database server for quick enumeration 
 ```pwsh
 Invoke-WebRequest "https://dev.mysql.com/get/Downloads/MySQLInstaller/mysql-installer-community-8.0.46.0.msi" -OutFile "$env:TEMP\mysql-installer.msi"
