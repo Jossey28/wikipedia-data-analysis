@@ -34,20 +34,19 @@ impl ConnectionConfig {
 
 #[derive(sqlx::FromRow, Debug)]
 pub struct Category {
-    cat_id: u32,
-    cat_title: Vec<u8>,
-    cat_pages: i32,
-    cat_subcats: i32,
-    cat_files: i32,
+    pub cat_id: u32,
+    pub cat_title: Vec<u8>,
+    pub cat_pages: i32,
+    pub cat_subcats: i32,
+    pub cat_files: i32,
 }
 
-// impl fmt::Display for Category {
-//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-//         let title = hex::FromHex
-
-//         write!(f, "cat_id, cat_title, cat_pages, cat_subcats, cat_files", self)
-//     }
-// }
+impl fmt::Display for Category {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let title = String::from_utf8(self.cat_title.clone()).unwrap();
+        write!(f, "{} ({}), on {} pages with {} subcategories and {} associated files", title, self.cat_id, self.cat_pages, self.cat_subcats, self.cat_files)
+    }
+}
 
 #[derive(sqlx::FromRow, Debug)]
 pub struct CategoryLinks {
