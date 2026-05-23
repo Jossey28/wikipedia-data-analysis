@@ -1,33 +1,39 @@
-
 use std::env;
-use mysql::{Pool, PooledConn};
-use serde::Deserialize;
 
-#[derive(Debug, Deserialize)]
-struct ConnectionConfig {
-    host: String,
-    port: u16,
-    database: String,
+use sqlx::mysql::MySqlPoolOptions;
+use sqlx::{MySql, Pool};
 
-    username: String,
-    password: String,
-}
+pub mod types;
 
+use types::ConnectionConfig;
 
-fn main() {
-    let connection = establish_connection();
-}
-
-fn establish_connection() -> PooledConn {
+#[tokio::main]
+async fn main() -> Result<(), sqlx::Error> {
     dotenvy::dotenv().ok();
 
-    let config: ConnectionConfig = envy::from_env().expect("Failed to load config");
-    
-    let connection_string = format!(
-        "mysql://{}:{}@{}:{}/{}", config.username, config.password, config.host, config.port, config.database);
+    let conn = establish_connection().await;
 
-    let pool = Pool::new(connection_string.as_str()).expect("Unable to create pool");
-    let conn = pool.get_conn().expect("Unable to create a connection to the pool");
+    let row: types::Category = sqlx::query_as(
+        "SELECT cat_id, cat_title, cat_pages, cat_subcats, cat_files FROM category LIMIT 1",
+    )
+    .fetch_one(&conn)
+    .await?;
 
-    conn
+    println!("{:#?}", row);
+
+    Ok(())
+}
+
+async fn establish_connection() -> Pool<MySql> {
+
+    let config  = ConnectionConfig::new();
+    let connection_string = config.generate_string();
+
+    let pool = MySqlPoolOptions::new()
+        .max_connections(3)
+        .connect(&connection_string)
+        .await
+        .expect("Failed to open connection");
+
+    pool
 }
