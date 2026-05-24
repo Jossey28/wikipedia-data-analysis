@@ -3,13 +3,22 @@ name = "wikipedia-data-analysis"
 version = "0.1.0"
 edition = "2024"
 
+# https://bevy.org/learn/quick-start/getting-started/setup/
+# Recommends opt-levels set for fast iterations.
+# [profile.dev]
+# opt-level = 1
+ 
+# [profile.dev.package."*"]
+# opt-level = 3
+
 [dependencies]
 chrono = "0.4.44"
+clap = { version = "4.6.1", features = ["derive"] }
 dotenvy = "0.15.7"
 envy = "0.4.2"
 hex = "0.4.3"
 mysql = "28.0.0"
-serde = "1.0.228"
+petgraph = "0.8.3"
 
 sqlx = { version = "0.8", features = [ "runtime-tokio", "mysql", "chrono" ] }
 tokio = { version = "1.52.3", features = ["rt-multi-thread", "macros"]}

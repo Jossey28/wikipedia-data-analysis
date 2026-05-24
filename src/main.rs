@@ -1,34 +1,45 @@
-use std::cmp::Reverse;
-
-use wikipedia_data_analysis::types;
+use sqlx::{MySql, QueryBuilder};
+use wikipedia_data_analysis::wikipedia_types::Category;
+use wikipedia_data_analysis::wikipedia_types::CategoryLinks;
 use wikipedia_data_analysis::helpers::establish_connection;
 
 #[tokio::main]
-async fn main() -> Result<(), sqlx::Error> {
+async fn main() {
     dotenvy::dotenv().ok();
 
     let conn = establish_connection().await;
 
-    let count: (i64,) = sqlx::query_as(
-        "SELECT COUNT(*) FROM category"
-    ).fetch_one(&conn)
-        .await?;
+    let categories: Vec<Category> = sqlx::query_as("
+        SELECT cat_id, cat_title, cat_pages, cat_subcats, cat_files
+        FROM category 
+        LIMIT 32
+    ").fetch_all(&conn).await.expect("Failed category SELECT");
 
-    let mut rows: Vec<types::Category> = sqlx::query_as(
-        "SELECT cat_id, cat_title, cat_pages, cat_subcats, cat_files
-        FROM category
-        ORDER BY cat_pages DESC
-        LIMIT 10
-        ",
-    )
-    .fetch_all(&conn)
-    .await?;
+    let mut query_builder: QueryBuilder<MySql> = QueryBuilder::new(
+        "SELECT cl_from, cl_sortkey, cl_timestamp, cl_sortkey_prefix, cl_type, cl_collation_id, cl_target_id
+        FROM categorylinks WHERE cl_type = '0x737562636174'
+        AND cl_target_id in ("
+    );
 
-    println!("There are {} categories below are the top 10 most linked\n", count.0);
-    rows.sort_by_key(|cat| Reverse(cat.cat_pages));
-    for row in &rows[..10] {
-        println!("{}", row);
+    let mut seperated = query_builder.separated(", ");
+    for category in &categories {
+        seperated.push(category.cat_id);
+    }
+    query_builder.push(")");
+
+    let category_links: Vec<CategoryLinks> = query_builder.build_query_as().fetch_all(&conn).await.expect("Failed categorylinks SELECT");
+
+    for cat in &categories {
+        println!("{}", cat);
     }
 
-    Ok(())
+    println!("");
+
+    for link in &category_links {
+        println!("{}", link);
+    }
+
+    println!("");
+
+    println!("categories: {} \t category links: {}", categories.len(), category_links.len());
 }

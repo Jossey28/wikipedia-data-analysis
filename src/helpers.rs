@@ -1,7 +1,7 @@
 use sqlx::mysql::MySqlPoolOptions;
 use sqlx::{MySql, Pool};
 
-use crate::types::ConnectionConfig;
+use crate::wikipedia_types::ConnectionConfig;
 
 pub async fn establish_connection() -> Pool<MySql> {
     let config = ConnectionConfig::new();
