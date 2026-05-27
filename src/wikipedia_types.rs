@@ -1,6 +1,6 @@
 use std::{
     env,
-    fmt::{self, Display},
+    fmt::{self, Display, write},
     ops::Index,
 };
 
@@ -45,10 +45,17 @@ impl ConnectionConfig {
 pub struct Category {
     // https://www.mediawiki.org/wiki/Manual:Category_table
     pub cat_id: u32,
-    pub cat_title: Vec<u8>,
+    pub cat_title: String,
     pub cat_pages: i32,
     pub cat_subcats: i32,
     pub cat_files: i32,
+}
+
+#[derive(sqlx::FromRow, Debug)]
+pub struct CategoryUsingPageId {
+    pub page_id: u32,
+    #[sqlx(flatten)]
+    pub cat: Category,
 }
 
 impl Into<u32> for Category {
@@ -59,14 +66,24 @@ impl Into<u32> for Category {
 
 impl fmt::Display for Category {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let title = String::from_utf8(self.cat_title.clone()).unwrap();
         write!(
             f,
             "{} ({}), on {} pages with {} subcategories and {} associated files",
-            title, self.cat_id, self.cat_pages, self.cat_subcats, self.cat_files
+            self.cat_title, self.cat_id, self.cat_pages, self.cat_subcats, self.cat_files
         )
     }
 }
+
+// impl fmt::Display for Vec<Category> {
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         let mut titles: Vec<String> = vec![];
+//         for cat in self {
+//             let title = String::from_utf8(cat.cat_title.clone()).unwrap();
+//             titles.push(title);
+//         };
+//         write!(f,"{}", titles)
+//     }
+// }
 
 #[derive(sqlx::FromRow, Debug)]
 pub struct CategoryLinks {
@@ -138,7 +155,7 @@ pub struct Page {
     // https://www.mediawiki.org/wiki/Manual:Page_table
     page_id: u32,
     page_namespace: i32,
-    page_title: Vec<u8>,
+    page_title: String,
     page_is_redirect: u8,
     page_is_new: u8,
     page_random: f64,
@@ -162,7 +179,7 @@ pub struct PageLinks {
 pub struct Redirect {
     rd_from: u32,
     rd_namespace: i32,
-    rd_title: Vec<u8>,
+    rd_title: String,
     rd_interwiki: Option<Vec<u8>>,
     rd_fragment: Option<Vec<u8>>,
 }
