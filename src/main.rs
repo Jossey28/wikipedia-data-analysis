@@ -1,7 +1,9 @@
+use std::collections::HashMap;
+
 use sqlx::{MySql, QueryBuilder};
+use wikipedia_data_analysis::helpers::establish_connection;
 use wikipedia_data_analysis::wikipedia_types::Category;
 use wikipedia_data_analysis::wikipedia_types::CategoryLinks;
-use wikipedia_data_analysis::helpers::establish_connection;
 
 #[tokio::main]
 async fn main() {
@@ -9,37 +11,43 @@ async fn main() {
 
     let conn = establish_connection().await;
 
-    let categories: Vec<Category> = sqlx::query_as("
+    let categories: Vec<Category> = sqlx::query_as(
+        "
         SELECT cat_id, cat_title, cat_pages, cat_subcats, cat_files
-        FROM category 
-        LIMIT 32
-    ").fetch_all(&conn).await.expect("Failed category SELECT");
+        FROM category
+        ORDER BY cat_subcats DESC
+    ",
+    )
+    .fetch_all(&conn)
+    .await
+    .expect("Failed category SELECT");
 
-    let mut query_builder: QueryBuilder<MySql> = QueryBuilder::new(
+    let subcat_list: Vec<CategoryLinks> = sqlx::query_as(
         "SELECT cl_from, cl_sortkey, cl_timestamp, cl_sortkey_prefix, cl_type, cl_collation_id, cl_target_id
-        FROM categorylinks WHERE cl_type = '0x737562636174'
-        AND cl_target_id in ("
-    );
+        FROM categorylinks WHERE cl_type = 'subcat'
+    ").fetch_all(&conn).await.expect("Failed categorylinks query");
 
-    let mut seperated = query_builder.separated(", ");
-    for category in &categories {
-        seperated.push(category.cat_id);
-    }
-    query_builder.push(")");
-
-    let category_links: Vec<CategoryLinks> = query_builder.build_query_as().fetch_all(&conn).await.expect("Failed categorylinks SELECT");
-
-    for cat in &categories {
-        println!("{}", cat);
+    let mut category_map: HashMap<u32, Category> = HashMap::with_capacity(categories.len());
+    for cat in categories {
+        category_map.insert(cat.cat_id, cat);
     }
 
-    println!("");
-
-    for link in &category_links {
-        println!("{}", link);
+    let mut children: HashMap<u32, Vec<u32>> = HashMap::with_capacity(subcat_list.len());
+    for subcat in subcat_list {
+        children
+            .entry(subcat.cl_from)
+            .or_default()
+            .push(subcat.cl_target_id as u32);
     }
 
-    println!("");
+    let total_parents = children.len();
+    let total_children: usize = children.values().map(|v| v.len()).sum();
+    println!("parents: {} ; children: {}", total_parents, total_children);
 
-    println!("categories: {} \t category links: {}", categories.len(), category_links.len());
+    for (parent, kids) in children.iter().take(5) {
+        print!("parent: {} -> ", category_map.get(parent).unwrap());
+        for kid in kids {
+            print!("{} ", category_map.get(kid).unwrap());
+        }
+    }
 }

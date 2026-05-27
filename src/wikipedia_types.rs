@@ -1,4 +1,8 @@
-use std::{env, fmt::{self, Display}};
+use std::{
+    env,
+    fmt::{self, Display},
+    ops::Index,
+};
 
 use chrono::Utc;
 
@@ -37,13 +41,20 @@ impl ConnectionConfig {
     }
 }
 
-#[derive(sqlx::FromRow, Debug)]
-pub struct Category { // https://www.mediawiki.org/wiki/Manual:Category_table
+#[derive(sqlx::FromRow, Hash, PartialEq, Eq, Debug)]
+pub struct Category {
+    // https://www.mediawiki.org/wiki/Manual:Category_table
     pub cat_id: u32,
     pub cat_title: Vec<u8>,
     pub cat_pages: i32,
     pub cat_subcats: i32,
     pub cat_files: i32,
+}
+
+impl Into<u32> for Category {
+    fn into(self) -> u32 {
+        self.cat_id
+    }
 }
 
 impl fmt::Display for Category {
@@ -58,14 +69,15 @@ impl fmt::Display for Category {
 }
 
 #[derive(sqlx::FromRow, Debug)]
-pub struct CategoryLinks { // https://www.mediawiki.org/wiki/Manual:Categorylinks_table
-    cl_from: u32, // a "page id" for the category
-    cl_sortkey: Vec<u8>,
-    cl_timestamp: chrono::DateTime<Utc>,
-    cl_sortkey_prefix: Vec<u8>,
-    cl_type: Vec<u8>,
-    cl_collation_id: u16,
-    cl_target_id: u64,
+pub struct CategoryLinks {
+    // https://www.mediawiki.org/wiki/Manual:Categorylinks_table
+    pub cl_from: u32, // a "page id" for the category
+    pub cl_sortkey: Vec<u8>,
+    pub cl_timestamp: chrono::DateTime<Utc>,
+    pub cl_sortkey_prefix: Vec<u8>,
+    pub cl_type: Vec<u8>,
+    pub cl_collation_id: u16,
+    pub cl_target_id: u64,
 }
 
 impl Display for CategoryLinks {
@@ -93,7 +105,7 @@ impl From<String> for CategoryLinksTypes {
             "page" => Self::Page,
             "subcat" => Self::Subcat,
             "file" => Self::File,
-            unkwn => panic!("unknown cl_type {}", unkwn)
+            unkwn => panic!("unknown cl_type {}", unkwn),
         }
     }
 }
@@ -104,7 +116,7 @@ impl From<Vec<u8>> for CategoryLinksTypes {
             "page" => Self::Page,
             "subcat" => Self::Subcat,
             "file" => Self::File,
-            unkwn => panic!("unknown cl_type {}", unkwn)
+            unkwn => panic!("unknown cl_type {}", unkwn),
         }
     }
 }
@@ -116,13 +128,14 @@ impl Display for CategoryLinksTypes {
             Self::File => "file",
             Self::Subcat => "subcat",
         };
-        
-        write!(f,"{}",string)
+
+        write!(f, "{}", string)
     }
 }
 
 #[derive(sqlx::FromRow, Debug)]
-pub struct Page { // https://www.mediawiki.org/wiki/Manual:Page_table
+pub struct Page {
+    // https://www.mediawiki.org/wiki/Manual:Page_table
     page_id: u32,
     page_namespace: i32,
     page_title: Vec<u8>,
@@ -138,7 +151,8 @@ pub struct Page { // https://www.mediawiki.org/wiki/Manual:Page_table
 }
 
 #[derive(sqlx::FromRow, Debug)]
-pub struct PageLinks { // https://www.mediawiki.org/wiki/Manual:Pagelinks_table
+pub struct PageLinks {
+    // https://www.mediawiki.org/wiki/Manual:Pagelinks_table
     pl_from: u32,
     pl_from_namespace: i32,
     pl_target_id: u64,
