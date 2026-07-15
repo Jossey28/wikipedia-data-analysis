@@ -32,7 +32,7 @@ async fn main() {
         tmp
     };
 
-    let children: HashMap<u32, Vec<u32>> = {
+    let family: HashMap<u32, Vec<u32>> = {
         let subcat_list: Vec<CategoryLinks> = sqlx::query_as(
   "SELECT cl_from, cl_sortkey, cl_timestamp, cl_sortkey_prefix, cl_type, cl_collation_id, cl_target_id
         FROM categorylinks 
@@ -55,19 +55,6 @@ async fn main() {
         tmp
     };
 
-    let total_parents = children.len();
-    let total_children: usize = children.values().map(|v| v.len()).sum();
-    println!("parents: {} ; children: {}", total_parents, total_children);
-
-    for (parent, kids) in children.iter().take(20) {
-        let par = category_map.get(parent);
-
-        let mut actual_kids: Vec<&Category> = vec![];
-        for kid in kids {
-            let ki = category_map.get(kid).unwrap();
-            actual_kids.push(ki);
-        }
-
-        println!("{} with {:?} as kids", par.unwrap(), actual_kids)
-    }
+    let edges: usize = family.values().map(|v| v.len()).sum();
+    println!("nodes: {}, children: {}", family.len(), edges)
 }
